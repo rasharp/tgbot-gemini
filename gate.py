@@ -3,38 +3,41 @@ from pydantic import BaseModel
 import os
 import uvicorn
 from google import genai
+from google.genai import types
 
 
 GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
 
 # Класс для работы с моделью
 class Gemini:
-    def __init__(self, api_key, fake: bool = False):
-        self.fake = fake
-        if not fake:
-            self.client = genai.Client(api_key=api_key)
-            self.chat = self.client.aio.chats.create(model="gemini-2.0-flash")
+    def __init__(self, api_key):
+        self.client = genai.Client(api_key=api_key)
+        self.chat = self.client.aio.chats.create(model="gemini-2.0-flash")
     
-    def reset(self):
-        if not self.fake:
-            self.chat = self.client.aio.chats.create(model="gemini-2.0-flash")
+    def reset(self, role=''):
+        if role == '':
+            self.chat = self.client.aio.chats.create(
+                            model="gemini-2.0-flash"
+                        )
+        else:
+            self.chat = self.client.aio.chats.create(
+                            model="gemini-2.0-flash",
+                            config=types.GenerateContentConfig(system_instruction=role)
+                        )
     
     async def get_gemini_response(self, prompt: str):
-        if self.fake:
-            return "I don't think so..."
-        else:
-            response = await self.chat.send_message(prompt)
-            return response.text
+        response = await self.chat.send_message(prompt)
+        return response.text
 
 
-gemini = Gemini(GEMINI_API_KEY, fake=True)
+gemini = Gemini(GEMINI_API_KEY)
 app = FastAPI()
 
 # Определяем модель входящих данных
 class RequestModel(BaseModel):
-    role: str
+    role: str = ''
     request: str
-    new: bool
+    new: bool = False
 
 class ResponseModel(BaseModel):
     response: str
@@ -42,7 +45,7 @@ class ResponseModel(BaseModel):
 @app.post("/request-llm", response_model=ResponseModel)
 async def request_llm(request_json: RequestModel) -> ResponseModel:
     if request_json.new:
-        gemini.reset()
+        gemini.reset(request_json.role)
     
     # запрашиваем модель
     response = await gemini.get_gemini_response(request_json.request)
