@@ -4,15 +4,14 @@ import asyncio
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from google import genai
-from dotenv import load_dotenv
 
-load_dotenv()
+# from dotenv import load_dotenv
+# load_dotenv()
 
 
 # Читаем переменные окружения
-
-TGBOT_API_TOKEN = os.environ.get('TGBOT_API_TOKEN')
-GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY')
+TGBOT_API_TOKEN = os.environ.get('TGBOT_API_TOKEN', '')
+GEMINI_API_KEY = os.environ.get('GEMINI_API_KEY', '')
 
 # Функция для работы с моделью
 def gemini_wrapper():
