@@ -1,13 +1,36 @@
 import os
-import asyncio
+import aiohttp
 
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
-from google import genai
+
+# from dotenv import load_dotenv
+# load_dotenv()
+
 
 # Читаем переменные окружения
 TGBOT_API_TOKEN = os.environ.get('TGBOT_API_TOKEN', '')
 
+B4A_APP_ID = os.environ.get('B4A_APP_ID', '')
+B4A_API_KEY = os.environ.get('B4A_API_KEY', '')
+URL = "https://parseapi.back4app.com/functions/gemini"
+
+async def b4a_gemini_response_(prompt):
+    headers = {
+        "X-Parse-Application-Id": B4A_APP_ID,
+        "X-Parse-REST-API-Key": B4A_API_KEY,
+        "Content-Type": "application/json"
+    }
+    
+    json_data = {
+        "prompt": prompt
+    }
+    
+    async with aiohttp.ClientSession() as session:
+        async with session.post(URL, headers=headers, json=json_data) as response:
+            response_data = await response.json()
+            return response_data['result']['candidates'][0]['content']['parts'][0]['text']
+        
 
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
@@ -23,12 +46,15 @@ async def new_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     await update.message.reply_text("Обрабатываю ваш запрос...")
+
     try:
-        response = await gemini_response(user_message)
+        response = await b4a_gemini_response_(user_message)
         await update.message.reply_text(response)
+
     except Exception as e:
         await update.message.reply_text("Произошла ошибка при обработке вашего запроса.")
         print(f"Error: {e}")
+
 
 # Основная функция для запуска бота
 def main():
