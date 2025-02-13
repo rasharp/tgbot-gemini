@@ -5,8 +5,6 @@ from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 from google import genai
 
-from dotenv import load_dotenv
-load_dotenv()
 # Читаем переменные окружения
 TGBOT_API_TOKEN = os.environ.get('TGBOT_API_TOKEN', '')
 
