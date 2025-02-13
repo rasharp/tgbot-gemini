@@ -1,11 +1,14 @@
 import os
 import aiohttp
+from loguru import logger
 
 from telegram import Update
 from telegram.ext import ApplicationBuilder, CommandHandler, MessageHandler, filters, ContextTypes
 
-# from dotenv import load_dotenv
-# load_dotenv()
+from dotenv import load_dotenv
+load_dotenv()
+
+logger.add('gemini.log', rotation='1 month')
 
 
 # Читаем переменные окружения
@@ -30,30 +33,35 @@ async def b4a_gemini_response_(prompt):
         async with session.post(URL, headers=headers, json=json_data) as response:
             response_data = await response.json()
             return response_data['result']['candidates'][0]['content']['parts'][0]['text']
-        
+
+
 
 # Обработчик команды /start
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = "Привет! Я бот, который может отвечать на ваши вопросы, используя модель Gemini. Напишите мне что-нибудь!"
     await update.message.reply_text(response)
+    logger.info("/start command received.")
 
 # Обработчик команды /new
 async def new_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
     response = "Начинаю новый контекст."
     await update.message.reply_text(response)
+    logger.info("/new command received.")
 
 # Обработчик текстовых сообщений
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     user_message = update.message.text
     await update.message.reply_text("Обрабатываю ваш запрос...")
+    logger.info(f"Request: {user_message[:100]}")
 
     try:
         response = await b4a_gemini_response_(user_message)
+        logger.info(f"Response: {response[:100]}")
         await update.message.reply_text(response)
 
     except Exception as e:
         await update.message.reply_text("Произошла ошибка при обработке вашего запроса.")
-        print(f"Error: {e}")
+        logger.error(f"Error: {e}")
 
 
 # Основная функция для запуска бота
