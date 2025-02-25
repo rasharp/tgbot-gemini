@@ -62,8 +62,8 @@ async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE
         response = await b4a_gemini_response_(user_message)
         logger.info(f"Response: {response[:100]}")
         # await update.message.reply_text(response)
-        for i in range(0, len(reply), max_length):
-            await context.bot.send_message(chat_id=chat_id, text=reply[i:i + max_length])
+        for i in range(0, len(response), max_length):
+            await context.bot.send_message(chat_id=chat_id, text=response[i:i + max_length])
             
     except Exception as e:
         await update.message.reply_text("Произошла ошибка при обработке вашего запроса.")
