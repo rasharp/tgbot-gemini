@@ -50,15 +50,21 @@ async def new_context(update: Update, context: ContextTypes.DEFAULT_TYPE):
 
 # Обработчик текстовых сообщений
 async def handle_text_message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    max_length = 4096  # Максимальная длина сообщения в Telegram
+    
     user_message = update.message.text
+    chat_id = update.effective_chat.id
+    
     await update.message.reply_text("Обрабатываю ваш запрос...")
     logger.info(f"Request: {user_message[:100]}")
 
     try:
         response = await b4a_gemini_response_(user_message)
         logger.info(f"Response: {response[:100]}")
-        await update.message.reply_text(response)
-
+        # await update.message.reply_text(response)
+        for i in range(0, len(reply), max_length):
+            await context.bot.send_message(chat_id=chat_id, text=reply[i:i + max_length])
+            
     except Exception as e:
         await update.message.reply_text("Произошла ошибка при обработке вашего запроса.")
         logger.error(f"Error: {e}")
